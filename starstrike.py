@@ -123,9 +123,10 @@ def attack(thread):
 #-- MAIN --#
 def main():
     print(''' 
-    ★ StarStrike ★
+★ StarStrike ★
     created by solez
-    READ THE WARNING AT THE TOP OF THE SCRIPT
+    
+    !READ THE WARNING AT THE TOP OF THE SCRIPT!
     ''')
     # HelloWorld("print")
     tcount = threads

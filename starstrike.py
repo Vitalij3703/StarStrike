@@ -32,7 +32,7 @@ import asyncio
 from fake_useragent import UserAgent
 
 def print_banner():
-    print('''
+    print(r'''
 #          _____ __             _____ __     _ __            #
 #         / ___// /_____ ______/ ___// /____ (_) /_____      #
 #        \__ \/ __/ __ `/ ___/\__ \/ __/ __/ / //_/ _ \      #

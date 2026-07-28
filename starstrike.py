@@ -77,7 +77,7 @@ if len(sys.argv) > 1:
         # set the type
         if arg.startswith("--type"):
             typea = arg.removeprefix("--type")
-            if not typea in types: exit(f"{type} as an attack type doesnt exist!")
+            if not typea in types: exit(f"{typea} as an attack type doesnt exist!")
         # the victims ip
         if arg.startswith("--victimip"):
             dest_ip = arg.removeprefix("--victimip")

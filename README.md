@@ -8,5 +8,3 @@
 Want to DDOS your website? Want to DDOS your network? This is the tool to do that!
 
 Made for Starbreak project by N E T W O R K 0 group. StarStrike made by Vitalij3703 (aka solez).
-
-The SDDOS file is WIP, do not test it.

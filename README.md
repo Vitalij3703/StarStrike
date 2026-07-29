@@ -5,6 +5,6 @@
      for the damages it may do, as it is the user's fault. </h2>
 
 <h1>StarStrike</h1>
-Want to DDOS your website? Want to DDOS your network? This is the tool to do that!
+Want to DOS your website? Want to DOS your network? This is the tool to do that!
 
 Made for Starbreak project by N E T W O R K 0 group. StarStrike made by Vitalij3703 (aka solez).

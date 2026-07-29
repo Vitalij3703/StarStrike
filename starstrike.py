@@ -27,8 +27,6 @@ import os
 from time import sleep
 import threading
 from scapy.all import send, IP, TCP, UDP, Raw, ICMP
-from aiohttp import TCPConnector, ClientTimeout, ClientSession, ClientError
-import asyncio
 from fake_useragent import UserAgent
 from secrets import randbelow
 from socket import gethostbyname

